@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exam Board Posting – By Level</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#4f9ea1;
+    --teal-dark:#2f6f72;
+    --ink:#0d0d0d;
+    --muted:#7a8a8f;
+    --line:#d6e4e6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Montserrat',system-ui,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(100deg,#ffffff 0%,#f7fafb 45%,#e9f1f6 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .watermark{position:fixed;left:-2vw;bottom:-4vw;width:34vw;max-width:520px;opacity:.07;pointer-events:none;z-index:0}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    position:fixed;top:14px;right:16px;z-index:10;display:flex;gap:8px;
+    transition:opacity .2s;
+  }
+  .toolbar button{
+    font:700 12px 'Montserrat',sans-serif;letter-spacing:.04em;text-transform:uppercase;
+    border:1.5px solid var(--teal);background:#fff;color:var(--teal-dark);
+    padding:8px 12px;border-radius:8px;cursor:pointer;
+  }
+  .toolbar button:hover{background:var(--teal);color:#fff}
+  .zoom{display:flex;align-items:center;background:#fff;border:1.5px solid var(--teal);border-radius:8px;overflow:hidden}
+  .toolbar .zoom button{border:none;border-radius:0;padding:6px 12px;font-size:16px;line-height:1}
+  .zoom span{font:800 12px 'Montserrat',sans-serif;color:var(--teal-dark);min-width:44px;text-align:center;cursor:pointer}
+  .board{zoom:var(--z,1)}
+  body.display .toolbar{opacity:0}
+  body.display .toolbar:hover{opacity:1}
+
+  /* ---------- board ---------- */
+  .board{position:relative;z-index:1;padding:clamp(28px,5vw,80px) clamp(16px,3vw,48px) 60px;max-width:1700px;margin:0 auto}
+
+  .label,.th{
+    color:#13286b;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    text-shadow:1.5px 1.5px 0 rgba(19,40,107,.22);
+  }
+  .value{
+    font-weight:900;text-transform:uppercase;color:var(--ink);
+    text-shadow:1px 1px 0 rgba(79,158,161,.35);
+  }
+
+  .head{
+    display:grid;grid-template-columns:auto 1fr;
+    column-gap:clamp(12px,1.4vw,24px);row-gap:clamp(10px,2.2vw,36px);
+    align-items:center;
+    width:fit-content;margin:0 auto clamp(28px,4vw,64px);
+  }
+  .head .label{font-size:clamp(20px,3vw,48px);text-align:right;white-space:nowrap}
+  .head .value{font-size:clamp(20px,3vw,48px)}
+
+  .clock{display:flex;align-items:baseline;gap:.35em;font-variant-numeric:tabular-nums}
+  .clock .sec{font-size:.6em;color:var(--teal-dark);text-shadow:none}
+
+  /* selects styled as plain heading text */
+  select.big, input.big{
+    font:inherit;color:inherit;text-transform:uppercase;text-shadow:inherit;
+    background:transparent;border:none;outline:none;cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    padding:.04em 1.1em .04em .1em;border-radius:8px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 7l5 6 5-6' fill='none' stroke='%234f9ea1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right .1em center;background-size:.65em;
+    max-width:100%;
+  }
+  select.big:hover,input.big:hover{background-color:rgba(79,158,161,.08)}
+  select.big:focus-visible,input.big:focus-visible{box-shadow:0 0 0 3px rgba(79,158,161,.35)}
+  select option{font:600 16px 'Montserrat',sans-serif;text-transform:none;color:#111;text-shadow:none}
+  body.display select.big,body.display input.big{background-image:none;padding-right:.1em}
+  body.display select.big:hover{background-color:transparent}
+
+  /* ---------- table ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:minmax(80px,.65fr) minmax(150px,1.35fr) minmax(170px,1.6fr) minmax(120px,.95fr) minmax(110px,.95fr) minmax(110px,.95fr) minmax(130px,1.1fr) 78px;
+    column-gap:clamp(8px,1.2vw,20px);
+    align-items:center;
+  }
+  .th{font-size:clamp(13px,1.75vw,32px);line-height:1.05;text-align:center;padding-bottom:clamp(10px,1.6vw,22px)}
+  .rows .row{
+    border-top:2px solid var(--line);
+    padding:clamp(10px,1.4vw,22px) 0;
+    position:relative;
+  }
+  .rows .row:last-child{border-bottom:2px solid var(--line)}
+  .cell{font-size:clamp(13px,1.45vw,27px);text-align:center;display:flex;justify-content:center;align-items:center;min-width:0}
+  .cell select.big,.cell input.big{text-align:center;text-align-last:center}
+  .subjcell select.big{white-space:normal;width:100%}
+  .comp select.big{white-space:normal}
+  .comp .wrap{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+  .comp input.big{width:100%;background-image:none;border-bottom:2px dashed var(--line);border-radius:0;padding-right:.1em}
+  body.display .comp input.big{border-bottom-color:transparent}
+
+  input[type=time].big{background-image:none;padding:.15em .25em;font-variant-numeric:tabular-nums;width:100%;cursor:text;border:2px solid var(--line);border-radius:8px;background-color:rgba(255,255,255,.7)}
+  input[type=time].big:hover{border-color:var(--teal)}
+  body.display input[type=time].big{border-color:transparent;background-color:transparent}
+  input[type=time].big::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer;filter:invert(55%) sepia(30%) saturate(500%) hue-rotate(140deg)}
+  body.display input[type=time].big::-webkit-calendar-picker-indicator{display:none}
+
+  .ctext{
+    width:100%;min-height:1.3em;outline:none;cursor:text;text-align:center;color:#000;
+    text-transform:uppercase;overflow-wrap:anywhere;border-radius:8px;padding:.05em .2em;
+    border:2px dashed transparent;
+  }
+  .ctext:empty::before{content:attr(data-ph);color:#a7b6ba;font-size:.5em;font-weight:700;letter-spacing:.06em;text-shadow:none;vertical-align:middle}
+  .ctext:empty{border-color:var(--line)}
+  .ctext:hover,.ctext:focus{border-color:var(--teal)}
+  body.display .ctext{border-color:transparent!important;cursor:default}
+  body.display .ctext:empty::before{content:"—";color:#000;font-size:1em}
+  .back{background:none;border:none;color:var(--teal-dark);font:700 11px 'Montserrat',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;text-shadow:none}
+  .back:hover{text-decoration:underline}
+  body.display .back{display:none}
+  .dur{font-variant-numeric:tabular-nums}
+  /* admin panel */
+  .modal{position:fixed;inset:0;z-index:50;background:rgba(10,20,50,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal[hidden]{display:none}
+  .panel{background:#fff;width:min(860px,100%);max-height:92vh;display:flex;flex-direction:column;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:'Montserrat',sans-serif;color:#111}
+  .p-head{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;padding:22px 24px 10px}
+  .p-head h2{font-weight:900;font-size:22px;color:#13286b;text-transform:uppercase}
+  .p-sub{font-size:13px;color:#555;margin-top:4px;font-weight:600;line-height:1.45}
+  .x{border:none;background:none;font-size:28px;line-height:1;cursor:pointer;color:#666}
+  .tabs{display:flex;gap:6px;padding:6px 24px 0;border-bottom:2px solid #e3e9f2}
+  .tabs button{font:800 13px 'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:10px 16px;border:none;background:none;color:#667;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabs button.on{color:#13286b;border-bottom-color:#13286b}
+  .p-body{overflow:auto;padding:16px 24px;display:flex;flex-direction:column;gap:12px;background:#f6f8fc}
+  .p-foot{display:flex;align-items:center;gap:10px;padding:14px 24px;border-top:2px solid #e3e9f2}
+  .p-foot .msg{flex:1;font-size:12px;font-weight:700;color:#555}
+  .p-foot .msg.err{color:#c62828}.p-foot .msg.ok{color:#1f7a45}
+  .primary,.ghost,.mini{font:800 12px 'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:.04em;border-radius:8px;cursor:pointer;padding:10px 16px}
+  .primary{background:#13286b;color:#fff;border:2px solid #13286b}
+  .primary:disabled{opacity:.5;cursor:not-allowed}
+  .ghost{background:#fff;color:#13286b;border:2px solid #c9d3e6}
+  .mini{padding:7px 11px;font-size:11px;background:#fff;border:1.5px solid #c9d3e6;color:#13286b}
+  .mini.danger{color:#c62828;border-color:#e3b4b4}
+  .card{background:#fff;border:1.5px solid #dde4ef;border-radius:12px;padding:14px}
+  .card-top{display:flex;gap:10px;align-items:center}
+  .card input[type=text]{font:700 14px 'Montserrat',sans-serif;border:1.5px solid #c9d3e6;border-radius:8px;padding:9px 10px;flex:1;min-width:0;color:#111}
+  .card input[type=text]:focus{outline:none;border-color:#13286b}
+  .card .subj{font-weight:900;font-size:15px}
+  .comps{display:flex;flex-direction:column;gap:8px;margin:12px 0 0 14px;padding-left:12px;border-left:3px solid #e3e9f2}
+  .crow{display:flex;gap:8px;align-items:center}
+  .crow label,.fallback{font-size:11px;font-weight:800;color:#556;text-transform:uppercase;letter-spacing:.04em}
+  .toggle{display:flex;align-items:center;gap:6px;border:1.5px solid #c9d3e6;background:#fff;border-radius:8px;padding:4px 10px 4px 4px;cursor:pointer;font:800 11px 'Montserrat',sans-serif;text-transform:uppercase;white-space:nowrap}
+  .toggle svg{width:28px;height:28px}
+  .toggle.yes{color:#1f7a45}.toggle.no{color:#c62828}
+  .fallback{display:flex;align-items:center;gap:10px;margin-top:10px;margin-left:14px}
+  .empty{font-size:13px;color:#667;font-weight:600;text-align:center;padding:20px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap}
+  .ro .card input,.ro .toggle,.ro .mini,.ro .bar button{pointer-events:none;opacity:.6}
+  .calc{background:none;border:none;cursor:pointer;padding:4px;border-radius:10px;line-height:0}
+  .calc svg{width:clamp(44px,4.6vw,80px);height:auto}
+  .calc:hover{background:rgba(79,158,161,.1)}
+  .calc.no svg>rect:first-child{opacity:.85}
+  body.display .calc{cursor:default}
+  body.display .calc:hover{background:none}
+  .rules{
+    margin:clamp(18px,2.4vw,36px) auto 0;max-width:1400px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.4vw,22px);
+  }
+  .rule{
+    display:flex;align-items:center;gap:clamp(10px,1vw,16px);
+    background:#13286b;color:#fff;border-radius:14px;
+    padding:clamp(12px,1.4vw,22px) clamp(14px,1.6vw,26px);
+    font-weight:800;font-size:clamp(14px,1.45vw,26px);line-height:1.3;
+  }
+  .rule svg{flex:none;width:clamp(28px,2.6vw,46px);height:auto;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  @media (max-width:820px){ .rules{grid-template-columns:1fr} }
+  .legend{display:flex;justify-content:center;gap:22px;margin-top:14px;font:700 13px 'Montserrat',sans-serif;color:#000;text-transform:uppercase;letter-spacing:.04em}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .legend svg{width:26px;height:26px}
+  .status{
+    position:absolute;left:0;top:50%;transform:translate(-115%,-50%);
+    width:10px;height:62%;border-radius:6px;background:transparent;
+  }
+  .row.live .status{background:#2fa36b;box-shadow:0 0 0 4px rgba(47,163,107,.15)}
+  .row .value,.row select.big,.row input.big{color:#000}
+  .tag{display:block;font-size:.48em;letter-spacing:.08em;margin-top:.3em;text-shadow:none;font-weight:900}
+  .tag:empty{display:none}
+  .row.live .tag{color:#2a8f5e}
+  .row.done .tag{display:table;margin:.35em auto 0;color:#fff;background:#c62828;padding:.25em .7em;border-radius:6px}
+  .row.done .status{background:#c62828}
+
+  .del{
+    border-radius:8px;border:1.5px solid #e3b4b4;background:#fff;color:#c62828;
+    font:800 11px/1 'Montserrat',sans-serif;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;padding:8px 8px;white-space:nowrap;
+  }
+  .del:hover,.del.confirm{background:#c62828;color:#fff;border-color:#c62828}
+  body.display .del{visibility:hidden}
+
+  .add{
+    margin:clamp(14px,2vw,26px) auto 0;display:block;
+    font:800 14px 'Montserrat',sans-serif;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;border:2px dashed var(--teal);color:var(--teal-dark);
+    padding:10px 22px;border-radius:10px;cursor:pointer;
+  }
+  .add:hover{background:rgba(79,158,161,.08)}
+  body.display .add{display:none}
+
+  .note{margin-top:22px;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+  body.display .note{display:none}
+
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr 1fr;row-gap:6px}
+    .th{display:none}
+    .row .cell::before{content:attr(data-label);display:block;font-size:11px;color:var(--teal-dark);font-weight:800;letter-spacing:.06em;margin-right:6px}
+    .row .cell{flex-direction:column}
+    .comp{grid-column:1 / -1}
+    .status{transform:translate(-60%,-50%)}
+  }
+</style>
+</head>
+<body>
+
+<!-- faint clock watermark (like the reference design) -->
+<svg class="watermark" viewBox="0 0 200 200" aria-hidden="true">
+  <g fill="none" stroke="#2f6f72" stroke-width="3">
+    <circle cx="100" cy="100" r="80"/><circle cx="100" cy="100" r="70"/>
+    <path d="M100 100V52M100 100l30 18" stroke-linecap="round" stroke-width="5"/>
+    <g stroke-width="3"><path d="M100 32v8M100 160v8M32 100h8M160 100h8"/></g>
+  </g>
+</svg>
+
+<div class="toolbar">
+  <div class="zoom">
+    <button id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
+    <span id="zVal">100%</span>
+    <button id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
+  </div>
+  <button id="adminBtn" title="Set up subjects, components and calculator rules">Admin</button>
+  <button id="modeBtn" title="Hide all editing controls for projecting">Display mode</button>
+  <button id="fsBtn">Full screen</button>
+</div>
+
+<main class="board">
+  <section class="head">
+    <div class="label">Exam Series :</div>
+    <div class="value">
+      <select class="big" id="series" aria-label="Exam series">
+        <option>Mid-Year Examination</option>
+        <option>Final Year Examination</option>
+      </select>
+    </div>
+
+    <div class="label">Day/Date :</div>
+    <div class="value" id="date">—</div>
+
+    <div class="label">Time Now :</div>
+    <div class="value clock" id="clock">--:--:--</div>
+
+  </section>
+
+  <section>
+    <div class="grid">
+      <div class="th">Level</div>
+      <div class="th">Subject</div>
+      <div class="th">Syllabus<br>Component</div>
+      <div class="th">Calculator</div>
+      <div class="th">Time<br>Start</div>
+      <div class="th">Time<br>End</div>
+      <div class="th">Duration</div>
+      <div></div>
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="legend" id="legend"></div>
+    <div class="rules" aria-label="Exam rules">
+      <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v5m0-1V3.5a1.5 1.5 0 0 1 3 0V10m0-4.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-.5a6 6 0 0 1-4.6-2.2L3.6 15.4a1.6 1.6 0 0 1 2.4-2.1L9 16V11"/></svg><span>Remain silent and raise your hand if you need assistance.</span></div>
+      <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6l7-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Maintain academic integrity at all times.</span></div>
+      <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4z"/><path d="M3 3l18 18"/></svg><span>Do not communicate with or disturb other candidates.</span></div>
+    </div>
+    <button class="add" id="addRow">+ Add exam session</button>
+    <p class="note">Tip: use <b>Display mode</b> before projecting — it hides the arrows and buttons so the board looks clean. Your selections are remembered on this browser.</p>
+  </section>
+</main>
+
+<div class="modal" id="adminModal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="p-head">
+      <div>
+        <h2 id="adminTitle">Admin set-up</h2>
+        <p class="p-sub">Enter the subjects, syllabus components and calculator rules. Invigilators then only pick the subject — the components and calculator icon fill in automatically.</p>
+      </div>
+      <button class="x" id="adminClose" aria-label="Close">×</button>
+    </div>
+    <div class="tabs" id="adminTabs"></div>
+    <div class="p-body" id="adminBody"></div>
+    <div class="p-foot">
+      <span class="msg" id="adminMsg"></span>
+      <button class="ghost" id="adminCancel">Cancel</button>
+      <button class="primary" id="adminSave">Save set-up</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEVELS = ["Sec 1","Sec 2","Sec 3","Sec 4","JC1"];
+const CUSTOM = "__custom__";
+let t_focus;
+
+// General (Sec 1 – Sec 4, JC2) syllabus components
+const GENERAL = {
+  "English Language": ["P1: Reading","P2: Directed Writing and Composition"],
+  "Chinese Language Express": ["P1: Reading and Writing","P2: Listening","P3: Speaking","P4: Writing"],
+  "Chinese Language Basic": ["P1: Listening","P2: Reading"],
+  "Bahasa Indonesia": ["P3: Speaking","P4: Writing"],
+  "Chinese Language AS": ["P1: Listening","P2: Reading","P3: Writing"],
+  "Chinese Language Special": ["P1: Listening","P2: Reading","P3: Speaking"],
+  "Sociology": [],
+  "Mathematics": ["Paper A: Non-Calculator","Paper B: Calculator"],
+  "Physics": [],
+  "Accounting": [],
+  "Business": [],
+  "Chemistry": [],
+  "Additional Mathematics": ["Paper A: Non-Calculator","Paper B: Calculator"],
+  "Computer Science": [],
+  "Biology": [],
+  "English General Paper": ["P1: Essay","P2: Comprehension"]
+};
+// JC1-specific components (override GENERAL when the row's level is JC1)
+// JC1 subjects and components
+const JC1 = {
+  "English General Paper": ["P1: Essay","P2: Comprehension"],
+  "Chinese Language L AS": ["P1: Listening","P3: Writing"],
+  "Chinese Language L Special": ["P2: Reading","P3: Speaking"],
+  "Accounting": ["P1: Multiple Choice","P2: Fundamentals of Accounting"],
+  "Business": [],
+  "Chemistry": ["P1: Multiple Choice","P2: Structured Questions"],
+  "Physics": ["P1: Multiple Choice","P2: Structured Questions"],
+  "Mathematics": ["P1: Pure Mathematics 1"],
+  "Biology": ["P1: Multiple Choice","P2: Structured Questions"],
+  "Computer Science": [],
+  "Economics": []
+};
+// Secondary 3 and 4 subjects and components
+const SEC34 = {
+  "English Language": ["P1: Reading","P2: Directed Writing and Composition"],
+  "Bahasa Indonesia": [],
+  "Sociology": [],
+  "Mathematics": ["Paper A: Non-Calculator","Paper B: Calculator"],
+  "Chinese Language Express": ["P3: Speaking","P1: Reading and Writing","P2: Listening"],
+  "Chinese Language Basic": ["P3: Speaking","P4: Writing","P2: Reading","P1: Listening"],
+  "Accounting": [],
+  "Biology": [],
+  "Computer Science": [],
+  "Physics": [],
+  "Chemistry": [],
+  "Business Studies": [],
+  "Additional Mathematics": ["Paper A: Non-Calculator","Paper B: Calculator"]
+};
+const BUILTIN_SUBJECTS = [...new Set([...Object.keys(GENERAL), ...Object.keys(JC1)])];
+const ADMIN_LEVELS = LEVELS;
+// Admin set-up (shared for everyone when available; cached on this device)
+let ADMIN = loadAdminCache() || {levels:{}};
+function loadAdminCache(){ try{ return JSON.parse(localStorage.getItem("bbs-exam-board-levels-admin")); }catch(e){ return null; } }
+function cacheAdmin(){ try{ localStorage.setItem("bbs-exam-board-levels-admin", JSON.stringify(ADMIN)); }catch(e){} }
+function adminSubject(level, subject){
+  const list = (ADMIN.levels || {})[level];
+  return Array.isArray(list) ? list.find(x => x && x.name === subject) : null;
+}
+function builtinTable(level){
+  if(level === "JC1") return JC1;
+  if(level === "Sec 3" || level === "Sec 4") return SEC34;
+  return GENERAL;   // Sec 1 & Sec 2 (set these up in Admin)
+}
+function builtinSubjects(level){ return Object.keys(builtinTable(level)); }
+function builtinComps(level, subject){ return builtinTable(level)[subject] || []; }
+function subjectsFor(level){
+  const a = (ADMIN.levels || {})[level];
+  if(Array.isArray(a) && a.length) return a.map(x => x.name).filter(Boolean);
+  return builtinSubjects(level);
+}
+function allSubjects(){
+  const extra = [];
+  ADMIN_LEVELS.forEach(l => ((ADMIN.levels||{})[l] || []).forEach(x => { if(x && x.name) extra.push(x.name); }));
+  return [...new Set([...BUILTIN_SUBJECTS, ...extra])];
+}
+
+// Subjects where a calculator is automatically NOT allowed
+const NO_CALC = ["Computer Science","English General Paper","English Language","Bahasa Indonesia","Sociology"];
+function defaultCalc(subject, comp, level){
+  const a = adminSubject(level, subject);
+  if(a){
+    const c = (a.comps || []).find(x => x.name === comp);
+    return c ? c.calc : (a.calc || "Not Allowed");
+  }
+  return builtinCalc(subject, comp);
+}
+function builtinCalc(subject, comp){
+  if(NO_CALC.includes(subject) || /^Chinese Language/.test(subject)) return "Not Allowed";
+  if(/non[\s-]?calculator/i.test(comp || "")) return "Not Allowed";
+  return "Allowed";
+}
+function calcIcon(ok){
+  const body = `<rect x="14" y="6" width="36" height="52" rx="6" fill="#fff" stroke="#000" stroke-width="4"/>
+    <rect x="20" y="12" width="24" height="11" rx="2" fill="#000"/>
+    <g fill="#000">${[0,1,2].map(r=>[0,1,2].map(c=>`<rect x="${20+c*9}" y="${29+r*9}" width="6" height="6" rx="1.5"/>`).join("")).join("")}</g>`;
+  const badge = ok
+    ? `<circle cx="50" cy="50" r="13" fill="#1f9d55" stroke="#fff" stroke-width="3"/><path d="M43.5 50.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`
+    : `<circle cx="50" cy="50" r="13" fill="#c62828" stroke="#fff" stroke-width="3"/><path d="M45 45l10 10M55 45l-10 10" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 66 66" aria-hidden="true">${body}${badge}</svg>`;
+}
+
+function componentsFor(level, subject){
+  const a = adminSubject(level, subject);
+  if(a) return (a.comps || []).map(c => c.name).filter(Boolean);
+  return builtinComps(level, subject);
+}
+
+/* ---------- state ---------- */
+const KEY = "bbs-exam-board-levels-v1";
+let state = load() || {
+  series: "Mid-Year Examination",
+  rows: [
+    {level:"Sec 3", subject:"English Language", comp:"P1: Reading", custom:"", calc:"Not Allowed", start:"07:30", end:"09:30"},
+    {level:"Sec 3", subject:"English Language", comp:"P2: Directed Writing and Composition", custom:"", calc:"Not Allowed", start:"10:00", end:"12:00"}
+  ],
+  display:false
+};
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+/* ---------- header ---------- */
+const seriesEl = document.getElementById("series");
+if(!["Mid-Year Examination","Final Year Examination"].includes(state.series)) state.series = "Mid-Year Examination";
+seriesEl.value = state.series;
+state.rows.forEach(r => { if(!LEVELS.includes(r.level)) r.level = "JC1"; });
+seriesEl.onchange = () => { state.series = seriesEl.value; save(); };
+
+/* ---------- rows ---------- */
+const rowsEl = document.getElementById("rows");
+
+function fmtDuration(start, end){
+  if(!start || !end) return "—";
+  const [sh,sm] = start.split(":").map(Number), [eh,em] = end.split(":").map(Number);
+  let mins = (eh*60+em) - (sh*60+sm);
+  if(mins <= 0) return "—";
+  const h = Math.floor(mins/60), m = mins%60, parts = [];
+  if(h) parts.push(h + (h===1 ? " HR" : " HRS"));
+  if(m || !h) parts.push(m + (m===1 ? " MINUTE" : " MINUTES"));
+  return parts.join(" ");
+}
+
+function renderRows(){
+  rowsEl.innerHTML = "";
+  state.rows.forEach((r, i) => {
+    const row = document.createElement("div");
+    row.className = "row grid";
+    row.innerHTML = `
+      <span class="status"></span>
+      <div class="cell value" data-label="LEVEL"><select class="big lvl" aria-label="Level"></select></div>
+      <div class="cell value subjcell" data-label="SUBJECT"><select class="big sub" aria-label="Subject"></select></div>
+      <div class="cell value comp" data-label="SYLLABUS COMPONENT"><div class="wrap"><select class="big cmp" aria-label="Syllabus component"></select></div></div>
+      <div class="cell value" data-label="CALCULATOR"><button class="calc" type="button"></button></div>
+      <div class="cell value" data-label="TIME START"><input type="time" class="big st" aria-label="Time start"></div>
+      <div class="cell value" data-label="TIME END"><input type="time" class="big en" aria-label="Time end"></div>
+      <div class="cell value dur" data-label="DURATION"><div><span class="d"></span><span class="tag"></span></div></div>
+      <div class="cell"><button class="del" title="Delete this exam session">Delete</button></div>`;
+
+    const lvl = row.querySelector(".lvl");
+    LEVELS.forEach(l => lvl.add(new Option(l, l)));
+    lvl.value = r.level;
+
+    const sub = row.querySelector(".sub");
+    function fillSub(){
+      const list = subjectsFor(r.level);
+      if(!list.includes(r.subject)) r.subject = list[0] || "";
+      sub.innerHTML = "";
+      list.forEach(x => sub.add(new Option(x, x)));
+      sub.value = r.subject;
+    }
+    fillSub();
+    const cmp = row.querySelector(".cmp");
+    const wrap = row.querySelector(".wrap");
+    function fillComp(){
+      const list = componentsFor(r.level, r.subject);
+      // subject has no listed papers -> typing only
+      if(list.length === 0){ r.comp = CUSTOM; }
+      else if(r.comp !== CUSTOM && !list.includes(r.comp)){ r.comp = list[0]; }
+
+      cmp.innerHTML = "";
+      list.forEach(c => cmp.add(new Option(c, c)));
+      if(list.length) cmp.add(new Option("Other (type your own)…", CUSTOM));
+      cmp.value = r.comp;
+
+      wrap.querySelector(".ctext")?.remove();
+      wrap.querySelector(".back")?.remove();
+      if(r.comp === CUSTOM){
+        cmp.style.display = "none";
+        const t = document.createElement("div");
+        t.className = "ctext";
+        t.contentEditable = "true";
+        t.spellcheck = false;
+        t.dataset.ph = "Click to type component";
+        t.setAttribute("aria-label","Syllabus component");
+        t.textContent = r.custom || "";
+        t.oninput = () => { r.custom = t.textContent; save(); };
+        t.onkeydown = e => { if(e.key === "Enter"){ e.preventDefault(); t.blur(); } };
+        t.onpaste = e => { e.preventDefault(); document.execCommand("insertText", false, (e.clipboardData.getData("text/plain")||"").replace(/\s+/g," ")); };
+        wrap.appendChild(t);
+        if(list.length){
+          const b = document.createElement("button");
+          b.className = "back"; b.type = "button"; b.textContent = "↩ Choose from list";
+          b.onclick = () => { r.comp = list[0]; r.custom = ""; fillComp(); autoCalc(); save(); };
+          wrap.appendChild(b);
+        }
+      } else {
+        cmp.style.display = "";
+      }
+      t_focus = r.comp === CUSTOM ? wrap.querySelector(".ctext") : null;
+    }
+    fillComp();
+    const calc = row.querySelector(".calc");
+    const showCalc = () => {
+      const ok = r.calc === "Allowed";
+      calc.className = "calc " + (ok ? "yes" : "no");
+      calc.innerHTML = calcIcon(ok);
+      calc.title = (ok ? "Calculator allowed" : "Calculator not allowed") + " (click to change)";
+      calc.setAttribute("aria-label", ok ? "Calculator allowed" : "Calculator not allowed");
+    };
+    const autoCalc = () => { r.calcManual = false; r.calc = defaultCalc(r.subject, r.comp, r.level); showCalc(); };
+    if(!r.calc || !r.calcManual){ r.calc = defaultCalc(r.subject, r.comp, r.level); }
+    showCalc();
+    calc.onclick = () => {
+      if(state.display) return;
+      r.calcManual = true;
+      r.calc = r.calc === "Allowed" ? "Not Allowed" : "Allowed"; showCalc(); save();
+    };
+    lvl.onchange = () => { r.level = lvl.value; fillSub(); r.comp = ""; r.custom = ""; fillComp(); autoCalc(); save(); };
+    sub.onchange = () => { r.subject = sub.value; r.comp = ""; r.custom = ""; fillComp(); autoCalc(); save(); };
+    cmp.onchange = () => {
+      r.comp = cmp.value; fillComp(); autoCalc(); save();
+      if(r.comp === CUSTOM) wrap.querySelector(".ctext")?.focus();
+    };
+
+    const st = row.querySelector(".st"), en = row.querySelector(".en"), d = row.querySelector(".d");
+    st.value = r.start || ""; en.value = r.end || "";
+    const upd = () => { r.start = st.value; r.end = en.value; d.textContent = fmtDuration(r.start, r.end); save(); tick(); };
+    st.oninput = upd; en.oninput = upd;
+    d.textContent = fmtDuration(r.start, r.end);
+
+    const del = row.querySelector(".del");
+    del.onclick = () => {
+      if(!del.classList.contains("confirm")){
+        del.classList.add("confirm"); del.textContent = "Confirm?";
+        setTimeout(() => { del.classList.remove("confirm"); del.textContent = "Delete"; }, 3000);
+        return;
+      }
+      state.rows.splice(i,1); save(); renderRows();
+    };
+    row._r = r;
+    rowsEl.appendChild(row);
+  });
+  tick();
+}
+
+document.getElementById("addRow").onclick = () => {
+  const last = state.rows[state.rows.length-1];
+  state.rows.push({level: last ? last.level : "Sec 1", subject: last ? last.subject : "", comp:"", custom:"", calc:"", start:"07:30", end:""});
+  save(); renderRows();
+};
+
+/* ---------- live date & time ---------- */
+const dateEl = document.getElementById("date"), clockEl = document.getElementById("clock");
+const pad = n => String(n).padStart(2,"0");
+function tick(){
+  const now = new Date();
+  dateEl.textContent = now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short",year:"numeric"})
+                          .replace(/^(\w+)\s/,"$1, ").toUpperCase();
+  let h = now.getHours(); const ampm = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+  clockEl.textContent = `${h}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${ampm}`;
+
+  const cur = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
+  rowsEl.querySelectorAll(".row").forEach(row => {
+    const r = row._r, tag = row.querySelector(".tag");
+    row.classList.remove("live","done"); tag.textContent = "";
+    if(!r.start || !r.end) return;
+    const s = toMin(r.start), e = toMin(r.end);
+    if(e <= s) return;
+    if(cur >= s && cur < e){
+      row.classList.add("live");
+      const left = Math.ceil(e - cur);
+      tag.textContent = `IN PROGRESS · ${fmtDuration("00:00", pad(Math.floor(left/60))+":"+pad(left%60))} LEFT`;
+    } else if(cur >= e){
+      row.classList.add("done"); tag.textContent = "EXAM ENDED";
+    }
+  });
+}
+const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+
+/* ---------- display mode & fullscreen ---------- */
+const modeBtn = document.getElementById("modeBtn");
+function applyMode(){
+  document.body.classList.toggle("display", !!state.display);
+  modeBtn.textContent = state.display ? "Edit mode" : "Display mode";
+}
+modeBtn.onclick = () => { state.display = !state.display; save(); applyMode(); renderRows(); };
+document.getElementById("fsBtn").onclick = async () => {
+  try{
+    if(document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  }catch(e){}
+};
+
+/* size header dropdowns to the chosen text so the arrow sits right beside it */
+function fitSelect(sel){
+  const m = document.createElement("span");
+  const cs = getComputedStyle(sel);
+  m.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font:${cs.font};text-transform:uppercase;letter-spacing:${cs.letterSpacing}`;
+  m.textContent = sel.options[sel.selectedIndex]?.text || "";
+  document.body.appendChild(m);
+  sel.style.width = (m.offsetWidth + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 4) + "px";
+  m.remove();
+}
+const fitHead = () => { fitSelect(seriesEl); };
+seriesEl.addEventListener("change", fitHead);
+window.addEventListener("resize", fitHead);
+modeBtn.addEventListener("click", fitHead);
+document.fonts?.ready.then(fitHead);
+
+document.getElementById("legend").innerHTML =
+  `<span>${calcIcon(true)} Calculator allowed</span><span>${calcIcon(false)} Calculator not allowed</span>`;
+/* ---------- admin set-up ---------- */
+const modal = document.getElementById("adminModal"), aBody = document.getElementById("adminBody"),
+      aTabs = document.getElementById("adminTabs"), aMsg = document.getElementById("adminMsg"),
+      aSave = document.getElementById("adminSave");
+let draft = null, aLevel = ADMIN_LEVELS[0], db = null, canWrite = null, sharedReady = false;
+
+const clone = o => JSON.parse(JSON.stringify(o));
+function setMsg(t, cls){ aMsg.textContent = t || ""; aMsg.className = "msg " + (cls || ""); }
+
+function openAdmin(){
+  draft = clone(ADMIN); draft.levels = draft.levels || {};
+  ADMIN_LEVELS.forEach(l => { if(!Array.isArray(draft.levels[l])) draft.levels[l] = []; });
+  modal.hidden = false;
+  if(canWrite === false){
+    setMsg("Only the board's owner or editors can change the set-up. You can view it here.", "err");
+    aSave.disabled = true; aBody.classList.add("ro");
+  } else {
+    setMsg(sharedReady ? "Saved set-up is shared with everyone who opens this board." : "Shared saving is not available in this view — set-up will be saved on this device only.");
+    aSave.disabled = false; aBody.classList.remove("ro");
+  }
+  renderAdmin();
+}
+function closeAdmin(){ modal.hidden = true; draft = null; }
+document.getElementById("adminBtn").onclick = openAdmin;
+document.getElementById("adminClose").onclick = closeAdmin;
+document.getElementById("adminCancel").onclick = closeAdmin;
+modal.addEventListener("click", e => { if(e.target === modal) closeAdmin(); });
+
+function toggleBtn(val, onChange){
+  const b = document.createElement("button"); b.type = "button";
+  const paint = () => { const ok = val === "Allowed"; b.className = "toggle " + (ok ? "yes" : "no");
+    b.innerHTML = calcIcon(ok) + (ok ? "Calculator allowed" : "Not allowed"); };
+  b.onclick = () => { val = val === "Allowed" ? "Not Allowed" : "Allowed"; paint(); onChange(val); };
+  paint(); return b;
+}
+function textIn(val, ph, onInput, cls){
+  const i = document.createElement("input"); i.type = "text"; i.value = val || ""; i.placeholder = ph;
+  if(cls) i.className = cls; i.oninput = () => onInput(i.value); return i;
+}
+function miniBtn(label, fn, danger){
+  const b = document.createElement("button"); b.type = "button"; b.className = "mini" + (danger ? " danger" : "");
+  b.textContent = label; b.onclick = fn; return b;
+}
+
+function renderAdmin(){
+  aTabs.innerHTML = "";
+  ADMIN_LEVELS.forEach(l => {
+    const b = document.createElement("button"); b.textContent = l; b.className = l === aLevel ? "on" : "";
+    b.onclick = () => { aLevel = l; renderAdmin(); }; aTabs.appendChild(b);
+  });
+  aBody.innerHTML = "";
+  const list = draft.levels[aLevel];
+
+  const bar = document.createElement("div"); bar.className = "bar";
+  bar.appendChild(miniBtn("+ Add subject", () => { list.push({name:"", calc:"Not Allowed", comps:[]}); renderAdmin();
+    aBody.querySelectorAll(".subj")[list.length-1]?.focus(); }));
+  bar.appendChild(miniBtn("Fill with default subject list", () => {
+    builtinSubjects(aLevel).forEach(n => {
+      if(list.some(x => x.name === n)) return;
+      list.push({ name:n, calc: builtinCalc(n, ""),
+        comps: builtinComps(aLevel, n).map(c => ({name:c, calc: builtinCalc(n, c)})) });
+    });
+    renderAdmin();
+  }));
+  const cp = document.createElement("select"); cp.className = "mini";
+  cp.add(new Option("Copy from level…", ""));
+  ADMIN_LEVELS.filter(l => l !== aLevel).forEach(l => cp.add(new Option("Copy from " + l, l)));
+  cp.onchange = () => { if(cp.value){ draft.levels[aLevel] = clone(draft.levels[cp.value] || []); renderAdmin(); } };
+  bar.appendChild(cp);
+  aBody.appendChild(bar);
+
+  if(!list.length){
+    const e = document.createElement("div"); e.className = "empty";
+    e.textContent = `No subjects set up for ${aLevel} yet. Until you add some, ${aLevel} uses the default list.`;
+    aBody.appendChild(e);
+  }
+
+  list.forEach((sub, si) => {
+    const card = document.createElement("div"); card.className = "card";
+    const top = document.createElement("div"); top.className = "card-top";
+    top.appendChild(textIn(sub.name, "Subject name, e.g. Mathematics", v => { sub.name = v; }, "subj"));
+    top.appendChild(miniBtn("Remove subject", () => { list.splice(si,1); renderAdmin(); }, true));
+    card.appendChild(top);
+
+    const comps = document.createElement("div"); comps.className = "comps";
+    (sub.comps || []).forEach((c, ci) => {
+      const row = document.createElement("div"); row.className = "crow";
+      row.appendChild(textIn(c.name, "Component, e.g. P1: Reading", v => { c.name = v; }));
+      row.appendChild(toggleBtn(c.calc, v => { c.calc = v; }));
+      row.appendChild(miniBtn("×", () => { sub.comps.splice(ci,1); renderAdmin(); }, true));
+      comps.appendChild(row);
+    });
+    comps.appendChild(miniBtn("+ Add component", () => {
+      sub.comps = sub.comps || []; sub.comps.push({name:"", calc: sub.calc || "Not Allowed"}); renderAdmin();
+      const cards = aBody.querySelectorAll(".card"); const last = cards[si]?.querySelectorAll(".crow input");
+      last && last[last.length-1]?.focus();
+    }));
+    card.appendChild(comps);
+
+    if(!(sub.comps || []).length){
+      const fb = document.createElement("div"); fb.className = "fallback";
+      fb.append("No components — invigilator types it. Calculator:");
+      fb.appendChild(toggleBtn(sub.calc || "Not Allowed", v => { sub.calc = v; }));
+      card.appendChild(fb);
+    }
+    aBody.appendChild(card);
+  });
+}
+
+function cleanDraft(d){
+  const out = {levels:{}, updatedAt: new Date().toISOString()};
+  ADMIN_LEVELS.forEach(l => {
+    const seen = new Set();
+    out.levels[l] = (d.levels[l] || []).map(s => ({
+      name: (s.name || "").trim(),
+      calc: s.calc === "Allowed" ? "Allowed" : "Not Allowed",
+      comps: (s.comps || []).map(c => ({name:(c.name||"").trim(), calc: c.calc === "Allowed" ? "Allowed" : "Not Allowed"})).filter(c => c.name)
+    })).filter(s => s.name && !seen.has(s.name) && seen.add(s.name));
+  });
+  return out;
+}
+
+aSave.onclick = async () => {
+  const next = cleanDraft(draft);
+  aSave.disabled = true; setMsg("Saving…");
+  if(db){
+    try{
+      await db.doc("config/subjects").set(next);
+      applyAdmin(next); setMsg("Saved — everyone opening this board now gets this set-up.", "ok");
+      setTimeout(closeAdmin, 900);
+    }catch(e){
+      if(e && e.code === "invalid_argument"){ canWrite = false; setMsg("You don't have permission to change the set-up. Ask the board owner to make you an Editor.", "err"); }
+      else setMsg("Couldn't save just now. Please try again.", "err");
+    }
+  } else {
+    applyAdmin(next); setMsg("Saved on this device only.", "ok"); setTimeout(closeAdmin, 900);
+  }
+  aSave.disabled = false;
+};
+
+function applyAdmin(cfg){
+  ADMIN = cfg && cfg.levels ? cfg : {levels:{}};
+  cacheAdmin();
+  fitHead && fitHead();
+  renderRows(); save();
+}
+
+/* connect shared storage when available */
+(async () => {
+  try{
+    const user = await claude.use("user");
+    if(user){ try{ const ce = await user.canEdit(); if(ce === false) canWrite = false; else if(ce === true) canWrite = true; }catch(e){} }
+  }catch(e){}
+  try{
+    db = await claude.use("db");
+    if(!db) return;
+    sharedReady = true;
+    db.doc("config/subjects").onSnapshot(snap => {
+      if(snap.exists){ const d = snap.data(); if(d && d.levels) applyAdmin(clone(d)); }
+    }, () => {});
+  }catch(e){ db = null; }
+})();
+
+/* zoom */
+const zVal = document.getElementById("zVal");
+function applyZoom(){
+  state.zoom = Math.min(2, Math.max(0.5, Math.round((state.zoom || 1)*10)/10));
+  document.documentElement.style.setProperty("--z", state.zoom);
+  zVal.textContent = Math.round(state.zoom*100) + "%";
+  fitHead();
+}
+document.getElementById("zIn").onclick = () => { state.zoom = (state.zoom||1) + 0.1; applyZoom(); save(); };
+document.getElementById("zOut").onclick = () => { state.zoom = (state.zoom||1) - 0.1; applyZoom(); save(); };
+zVal.title = "Reset to 100%";
+zVal.onclick = () => { state.zoom = 1; applyZoom(); save(); };
+document.addEventListener("keydown", e => {
+  if(e.target.closest("input,select,.ctext")) return;
+  if(e.key === "+" || e.key === "="){ document.getElementById("zIn").click(); }
+  else if(e.key === "-"){ document.getElementById("zOut").click(); }
+  else if(e.key === "0"){ zVal.click(); }
+});
+
+applyMode();
+renderRows();
+applyZoom();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
